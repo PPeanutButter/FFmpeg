@@ -99,13 +99,13 @@ static void srt_style_apply(SRTContext *s, const char *style)
             st->font_size != ASS_DEFAULT_FONT_SIZE ||
             c != ASS_DEFAULT_COLOR) {
             srt_print(s, "<font");
-            if (st->font_name && strcmp(st->font_name, ASS_DEFAULT_FONT))
-                srt_print(s, " face=\"%s\"", st->font_name);
-            if (st->font_size != ASS_DEFAULT_FONT_SIZE)
-                srt_print(s, " size=\"%d\"", st->font_size);
-            if (c != ASS_DEFAULT_COLOR)
-                srt_print(s, " color=\"#%06x\"",
-                          (c & 0xFF0000) >> 16 | c & 0xFF00 | (c & 0xFF) << 16);
+//            if (st->font_name && strcmp(st->font_name, ASS_DEFAULT_FONT))
+//                srt_print(s, " face=\"%s\"", st->font_name);
+//            if (st->font_size != ASS_DEFAULT_FONT_SIZE)
+//                srt_print(s, " size=\"%d\"", st->font_size);
+//            if (c != ASS_DEFAULT_COLOR)
+//                srt_print(s, " color=\"#%06x\"",
+//                          (c & 0xFF0000) >> 16 | c & 0xFF00 | (c & 0xFF) << 16);
             srt_print(s, ">");
             srt_stack_push(s, 'f');
         }
@@ -160,23 +160,23 @@ static void srt_color_cb(void *priv, unsigned int color, unsigned int color_id)
     if (color_id > 1)
         return;
     srt_stack_push_pop(priv, 'f', color == 0xFFFFFFFF);
-    if (color != 0xFFFFFFFF)
-        srt_print(priv, "<font color=\"#%06x\">",
-              (color & 0xFF0000) >> 16 | color & 0xFF00 | (color & 0xFF) << 16);
+//    if (color != 0xFFFFFFFF)
+//        srt_print(priv, "<font color=\"#%06x\">",
+//              (color & 0xFF0000) >> 16 | color & 0xFF00 | (color & 0xFF) << 16);
 }
 
 static void srt_font_name_cb(void *priv, const char *name)
 {
     srt_stack_push_pop(priv, 'f', !name);
-    if (name)
-        srt_print(priv, "<font face=\"%s\">", name);
+//    if (name)
+//        srt_print(priv, "<font face=\"%s\">", name);
 }
 
 static void srt_font_size_cb(void *priv, int size)
 {
     srt_stack_push_pop(priv, 'f', size < 0);
-    if (size >= 0)
-        srt_print(priv, "<font size=\"%d\">", size);
+//    if (size >= 0)
+//        srt_print(priv, "<font size=\"%d\">", size);
 }
 
 static void srt_alignment_cb(void *priv, int alignment)
