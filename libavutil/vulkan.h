@@ -227,7 +227,8 @@ typedef struct FFVkExecPool {
 } FFVkExecPool;
 
 typedef struct FFVulkanContext {
-    const AVClass *class; /* Filters and encoders use this */
+    const AVClass *class;
+    void *log_parent;
 
     FFVulkanFunctions     vkfn;
     FFVulkanExtensions    extensions;
@@ -238,6 +239,7 @@ typedef struct FFVulkanContext {
     VkPhysicalDeviceDescriptorBufferPropertiesEXT desc_buf_props;
     VkPhysicalDeviceSubgroupSizeControlProperties subgroup_props;
     VkPhysicalDeviceCooperativeMatrixPropertiesKHR coop_matrix_props;
+    VkPhysicalDeviceOpticalFlowPropertiesNV optical_flow_props;
     VkQueueFamilyQueryResultStatusPropertiesKHR *query_props;
     VkQueueFamilyVideoPropertiesKHR *video_props;
     VkQueueFamilyProperties2 *qf_props;
@@ -250,6 +252,7 @@ typedef struct FFVulkanContext {
     VkPhysicalDeviceVulkan12Features feats_12;
     VkPhysicalDeviceFeatures2 feats;
 
+    AVBufferRef           *device_ref;
     AVHWDeviceContext     *device;
     AVVulkanDeviceContext *hwctx;
 
@@ -258,7 +261,7 @@ typedef struct FFVulkanContext {
     AVHWFramesContext     *frames;
     AVVulkanFramesContext *hwfc;
 
-    uint32_t               qfs[5];
+    uint32_t               qfs[64];
     int                    nb_qfs;
 
     /* Properties */
@@ -290,8 +293,25 @@ static inline const void *ff_vk_find_struct(const void *chain, VkStructureType s
     return NULL;
 }
 
+static inline void ff_vk_link_struct(void *chain, const void *in)
+{
+    VkBaseOutStructure *out = chain;
+    while (out->pNext)
+        out = out->pNext;
+
+    out->pNext = (void *)in;
+}
+
 /* Identity mapping - r = r, b = b, g = g, a = a */
 extern const VkComponentMapping ff_comp_identity_map;
+
+/**
+ * Initializes the AVClass, in case this context is not used
+ * as the main user's context.
+ * May use either a frames context reference, or a device context reference.
+ */
+int ff_vk_init(FFVulkanContext *s, void *log_parent,
+               AVBufferRef *device_ref, AVBufferRef *frames_ref);
 
 /**
  * Converts Vulkan return values to strings
@@ -337,10 +357,11 @@ FFVkExecContext *ff_vk_exec_get(FFVkExecPool *pool);
 
 /**
  * Performs nb_queries queries and returns their results and statuses.
- * Execution must have been waited on to produce valid results.
+ * 64_BIT and WITH_STATUS flags are ignored as 64_BIT must be specified via
+ * query_64bit in ff_vk_exec_pool_init() and WITH_STATUS is always enabled.
  */
 VkResult ff_vk_exec_get_query(FFVulkanContext *s, FFVkExecContext *e,
-                              void **data, int64_t *status);
+                              void **data, VkQueryResultFlagBits flags);
 
 /**
  * Start/submit/wait an execution.
